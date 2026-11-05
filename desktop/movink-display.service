@@ -1,0 +1,12 @@
+[Unit]
+Description=Wacom MovinkPad 11 extra screen (Sunshine over USB tethering)
+Wants=movink-bridge.service
+After=movink-bridge.service graphical-session.target
+
+[Service]
+ExecStart=%h/code/wacom/movink-display.py
+Restart=on-failure
+RestartSec=5
+# SIGTERM only to the controller: it stops its children and restores the USB mode itself.
+KillMode=mixed
+TimeoutStopSec=30

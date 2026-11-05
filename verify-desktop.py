@@ -60,13 +60,22 @@ def report(step):
     print(f"== {step}: pc_device={pc} bridge={bridge} flag={FLAG.exists()} grabs={grabs}\n   {menu_state}")
 
 
-report("start")
-left_click(); time.sleep(4); report("left click: pause")
-left_click(); time.sleep(6); report("left click: resume")
-click("Bloquear toque do Android"); time.sleep(3); report("menu: block touch")
-click("Bloquear toque do Android"); time.sleep(3); report("menu: release touch")
-click("Caneta no PC"); time.sleep(4); report("menu: pause")
-click("Caneta no PC"); time.sleep(6); report("menu: resume")
+def display_state():
+    outputs = run("kscreen-doctor", "-o")
+    usb = run(str(ADB), "shell", "svc usb getFunctions 2>&1")
+    device = next((line for line in run("busctl", "--user", "tree", "org.kde.KWin", "--list").splitlines()
+                   if "InputDevice/event" in line
+                   and "MovinkPad" in run("busctl", "--user", "get-property", "org.kde.KWin", line,
+                                          "org.kde.KWin.InputDevice", "name")), None)
+    pen = device and run("busctl", "--user", "get-property", "org.kde.KWin", device,
+                         "org.kde.KWin.InputDevice", "outputName")
+    display = run("systemctl", "--user", "is-active", "movink-display")
+    moonlight = run(str(ADB), "shell", "pidof com.limelight") != ""
+    print(f"   display={display} monitor={'Virtual-MovinkPad' in outputs} usb=[{usb}] pen={pen} moonlight={moonlight}")
 
-run("systemctl", "--user", "stop", "movink-bridge"); time.sleep(3); report("external systemctl stop")
-run("systemctl", "--user", "start", "movink-bridge"); time.sleep(6); report("external systemctl start")
+
+report("start"); display_state()
+click("Modo: sem tela"); time.sleep(9); report("menu: screenless"); display_state()
+click("Modo: tela extra"); time.sleep(15); report("menu: extra screen"); display_state()
+left_click(); time.sleep(10); report("left click: pause everything"); display_state()
+left_click(); time.sleep(6); report("left click: resume pen only"); display_state()
