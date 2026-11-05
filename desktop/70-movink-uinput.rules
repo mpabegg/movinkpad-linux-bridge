@@ -1,0 +1,2 @@
+# Lets the logged-in user create the virtual pen. Must sort before 73-seat-late.rules.
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"

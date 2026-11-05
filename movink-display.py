@@ -16,11 +16,14 @@ OUTPUT = "Virtual-MovinkPad"
 RESOLUTION = "2200x1440"
 PEN_DEVICE_NAME = "Wacom MovinkPad 11 Pen"
 USB_NET_DRIVER = "rndis_host"
-SUNSHINE_CONF = Path.home() / ".config/sunshine/sunshine.conf"
+# Own file: an existing Sunshine setup keeps its sunshine.conf. Pairing still lives in ~/.config/sunshine.
+SUNSHINE_CONF = Path.home() / ".config/movink-bridge/sunshine.conf"
 SUNSHINE_STATE = Path.home() / ".config/sunshine/sunshine_state.json"
+SUNSHINE_LOG = Path.home() / ".config/sunshine/sunshine.log"
 SUNSHINE_PORT = 47989
-# Sunshine derives app ids from name and image, so the stock Desktop app always has this one.
+# Id of the stock Desktop app on Sunshine 2026.914. Other versions may differ; see open_stream().
 DESKTOP_APP_ID = 881448767
+STREAM_START_SECONDS = 12
 POLL_SECONDS = 2
 STOP_SECONDS = 8
 
@@ -69,9 +72,21 @@ class Adb:
             "am start -n com.limelight/.ShortcutTrampoline"
             f" --es UUID {host} --es Name PC --es AppId {DESKTOP_APP_ID} --es AppName Desktop"
         )
+        try:
+            wait_for(client_connected, STREAM_START_SECONDS, "stream")
+        except RuntimeError:
+            # Not paired yet, or another app id: leave the choice to the user on the PC list.
+            print("stream did not start, opening the Moonlight PC list", flush=True)
+            self.shell("am start -n com.limelight/.PcView")
+
 
     def close_stream(self):
         self.shell("am force-stop com.limelight")
+
+
+def client_connected():
+    # Moonlight's Game activity opens even when Sunshine rejects the launch; the log rotates per start.
+    return "CLIENT CONNECTED" in SUNSHINE_LOG.read_text(errors="replace")
 
 
 def usb_address():
@@ -126,7 +141,7 @@ def port_open(address):
 
 def start_sunshine(address):
     write_sunshine_conf(address)
-    sunshine = subprocess.Popen(["sunshine"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    sunshine = subprocess.Popen(["sunshine", str(SUNSHINE_CONF)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     wait_for(lambda: port_open(address), 30, "Sunshine")
     return sunshine
 
