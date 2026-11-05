@@ -34,20 +34,20 @@ class Tray:
         self.status = self.menu.addAction("")
         self.status.setEnabled(False)
         self.menu.addSeparator()
-        self.pen_action = QAction("Caneta no PC", self.menu, checkable=True)
+        self.pen_action = QAction("Pen on PC", self.menu, checkable=True)
         self.pen_action.triggered.connect(self.set_bridge)
         self.menu.addAction(self.pen_action)
         self.menu.addSeparator()
 
         self.modes = QActionGroup(self.menu)
-        self.screenless_action = QAction("Modo: sem tela", self.modes, checkable=True)
+        self.screenless_action = QAction("Mode: screenless", self.modes, checkable=True)
         self.screenless_action.triggered.connect(lambda: self.set_display(False))
-        self.display_action = QAction("Modo: tela extra", self.modes, checkable=True)
+        self.display_action = QAction("Mode: extra screen", self.modes, checkable=True)
         self.display_action.triggered.connect(lambda: self.set_display(True))
         self.menu.addActions(self.modes.actions())
         self.menu.addSeparator()
 
-        self.touch_action = QAction("Bloquear toque do Android", self.menu, checkable=True)
+        self.touch_action = QAction("Block Android touch", self.menu, checkable=True)
         self.touch_action.triggered.connect(self.set_touch_block)
         self.menu.addAction(self.touch_action)
 
@@ -99,15 +99,15 @@ class Tray:
         connected = enabled and pen_connected()
 
         if not enabled:
-            status = "Pausado: caneta no Android"
+            status = "Paused: pen on Android"
         elif not connected:
-            status = "Aguardando tablet no USB"
+            status = "Waiting for tablet on USB"
         elif display:
-            status = "Tela extra: caneta no PC"
+            status = "Extra screen: pen on PC"
         else:
-            status = "Ativo: caneta no PC"
+            status = "Active: pen on PC"
         if blocked and connected:
-            status += ", toque bloqueado"
+            status += ", touch blocked"
 
         self.status.setText(status)
         self.pen_action.setChecked(enabled)

@@ -39,8 +39,8 @@ then **USB debugging**. Connect it by USB and accept the prompt.
 On the PC:
 
 ```sh
-git clone <this repository> movink-bridge
-cd movink-bridge
+git clone https://github.com/mpabegg/movinkpad-linux-bridge.git
+cd movinkpad-linux-bridge
 ./install.sh --check   # lists missing tools
 ./install.sh
 ```
@@ -61,7 +61,7 @@ That is all for screenless mode: plug in the tablet and draw.
 3. Set the Sunshine login: `sunshine --creds <user> <password>`.
 4. Install [Moonlight](https://github.com/moonlight-stream/moonlight-android) on
    the tablet.
-5. Choose **Modo: tela extra** in the tray.
+5. Choose **Mode: extra screen** in the tray.
 6. Find the PC's USB address: `journalctl --user -u movink-display -n 5`
    (`display ready on <address>`).
 7. In Moonlight, tap **+** and add that address. Tap the new PC to get a PIN.
@@ -81,14 +81,14 @@ at the PC list; tap the PC and then **Desktop**. Rearrange the monitor in KDE's
 
 ## Use
 
-The tray icon starts at login. Its menu is in Portuguese for now.
+The tray icon starts at login.
 
 | Menu item | Meaning |
 | --- | --- |
-| Left click, or **Caneta no PC** | Pen on the PC, or pause: everything returns to Android |
-| **Modo: sem tela** | Screenless mode |
-| **Modo: tela extra** | Extra screen mode |
-| **Bloquear toque do Android** | Fingers do nothing on the tablet, in Moonlight too |
+| Left click, or **Pen on PC** | Pen on the PC, or pause: everything returns to Android |
+| **Mode: screenless** | Screenless mode |
+| **Mode: extra screen** | Extra screen mode |
+| **Block Android touch** | Fingers do nothing on the tablet, in Moonlight too |
 
 The icon is colored while the pen is on the PC. Pressure curves and pen buttons
 are configured in KDE's **Drawing Tablet** settings.

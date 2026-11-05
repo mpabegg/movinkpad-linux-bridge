@@ -75,7 +75,7 @@ def display_state():
 
 
 report("start"); display_state()
-click("Modo: sem tela"); time.sleep(9); report("menu: screenless"); display_state()
-click("Modo: tela extra"); time.sleep(15); report("menu: extra screen"); display_state()
+click("Mode: screenless"); time.sleep(9); report("menu: screenless"); display_state()
+click("Mode: extra screen"); time.sleep(15); report("menu: extra screen"); display_state()
 left_click(); time.sleep(10); report("left click: pause everything"); display_state()
 left_click(); time.sleep(6); report("left click: resume pen only"); display_state()
