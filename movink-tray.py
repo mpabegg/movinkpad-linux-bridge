@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""System tray control for the MovinkPad: pen on/off, display mode and Android touch block."""
+"""System tray control for the MovinkPad: pen on/off, display mode, pen area and Android touch block."""
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +11,8 @@ from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 BRIDGE = "movink-bridge.service"
 DISPLAY = "movink-display.service"
 BLOCK_TOUCH_FILE = Path.home() / ".config/movink-bridge/block_touch"
+MATCH_SCREEN_FILE = Path.home() / ".config/movink-bridge/match_screen"
+HIDE_AREA_FILE = Path.home() / ".config/movink-bridge/hide_area"
 PEN_DEVICE_NAME = "Wacom MovinkPad 11 Pen"
 REFRESH_MS = 2000
 
@@ -22,6 +24,11 @@ def unit_enabled(unit):
 
 def pen_connected():
     return PEN_DEVICE_NAME in Path("/proc/bus/input/devices").read_text()
+
+
+def primary_screen_size():
+    size = QApplication.primaryScreen().size()
+    return f"{size.width()} {size.height()}\n"
 
 
 class Tray:
@@ -45,6 +52,14 @@ class Tray:
         self.display_action = QAction("Mode: extra screen", self.modes, checkable=True)
         self.display_action.triggered.connect(lambda: self.set_display(True))
         self.menu.addActions(self.modes.actions())
+        self.menu.addSeparator()
+
+        self.match_action = QAction("Match screen ratio", self.menu, checkable=True)
+        self.match_action.triggered.connect(self.set_match_screen)
+        self.menu.addAction(self.match_action)
+        self.area_action = QAction("Show area on tablet", self.menu, checkable=True)
+        self.area_action.triggered.connect(self.set_area_visible)
+        self.menu.addAction(self.area_action)
         self.menu.addSeparator()
 
         self.touch_action = QAction("Block Android touch", self.menu, checkable=True)
@@ -83,6 +98,22 @@ class Tray:
         self.systemctl("start" if enabled else "stop", DISPLAY)
         self.refresh(enabled or self.pen_action.isChecked(), enabled)
 
+    def set_match_screen(self, enabled):
+        if enabled:
+            MATCH_SCREEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+            MATCH_SCREEN_FILE.write_text(primary_screen_size())
+        else:
+            MATCH_SCREEN_FILE.unlink(missing_ok=True)
+        self.refresh()
+
+    def set_area_visible(self, visible):
+        if visible:
+            HIDE_AREA_FILE.unlink(missing_ok=True)
+        else:
+            HIDE_AREA_FILE.parent.mkdir(parents=True, exist_ok=True)
+            HIDE_AREA_FILE.touch()
+        self.refresh()
+
     def set_touch_block(self, blocked):
         if blocked:
             BLOCK_TOUCH_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -97,6 +128,9 @@ class Tray:
         display = unit_enabled(DISPLAY) if display is None else display
         blocked = BLOCK_TOUCH_FILE.exists()
         connected = enabled and pen_connected()
+        matched = MATCH_SCREEN_FILE.exists()
+        if matched and MATCH_SCREEN_FILE.read_text() != primary_screen_size():
+            MATCH_SCREEN_FILE.write_text(primary_screen_size())
 
         if not enabled:
             status = "Paused: pen on Android"
@@ -112,6 +146,9 @@ class Tray:
         self.status.setText(status)
         self.pen_action.setChecked(enabled)
         (self.display_action if display else self.screenless_action).setChecked(True)
+        self.match_action.setChecked(matched)
+        self.area_action.setChecked(not HIDE_AREA_FILE.exists())
+        self.area_action.setEnabled(matched)
         self.touch_action.setChecked(blocked)
         self.tray.setIcon(self.on_icon if connected else self.off_icon)
         self.tray.setToolTip(f"MovinkPad\n{status}")

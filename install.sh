@@ -22,6 +22,8 @@ want() {
     fi
 }
 
+has_overlay_tools() { command -v javac >/dev/null && ls "${ANDROID_HOME:-$HOME/Android/Sdk}"/build-tools/*/d8 >/dev/null 2>&1; }
+
 need has_adb "adb (android-tools package, or the Android SDK platform-tools)"
 need has_pyqt "PyQt6 for /usr/bin/python3 (python3-pyqt6-base on Fedora, python3-pyqt6 on Debian/Ubuntu)"
 need "command -v rustup >/dev/null" "rustup (https://rustup.rs): distro Rust packages lack the ARM64 target and rust-lld"
@@ -31,12 +33,16 @@ want sunshine "https://github.com/LizardByte/Sunshine"
 want kscreen-doctor "libkscreen tools, part of KDE Plasma"
 want busctl "systemd"
 want nmcli "NetworkManager"
+has_overlay_tools || echo "the pen area will not be drawn on the tablet without a JDK and the Android SDK build-tools"
 
 [ "$missing" = 0 ] || exit 1
 [ "${1:-}" != "--check" ] || exit 0
 
 rustup target add aarch64-unknown-linux-musl
 (cd "$root/grab" && cargo build --release)
+if has_overlay_tools; then
+    "$root/overlay/build.sh"
+fi
 chmod +x "$root/movink-bridge.py" "$root/movink-display.py" "$root/movink-tray.py"
 
 if ! cmp -s "$root/desktop/70-movink-uinput.rules" "$rule"; then

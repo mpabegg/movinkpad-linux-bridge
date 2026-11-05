@@ -47,7 +47,8 @@ cd movinkpad-linux-bridge
 
 Requires `adb`, [rustup](https://rustup.rs) and PyQt6. The installer builds a
 small ARM64 helper, asks for your password once to add a udev rule for
-`/dev/uinput`, and enables two user services.
+`/dev/uinput`, and enables two user services. A JDK and the Android SDK
+build-tools are optional: without them, the pen area is not drawn on the tablet.
 
 That is all for screenless mode: plug in the tablet and draw.
 
@@ -89,9 +90,16 @@ The tray icon starts at login.
 | **Mode: screenless** | Screenless mode |
 | **Mode: extra screen** | Extra screen mode |
 | **Block Android touch** | Fingers do nothing on the tablet, in Moonlight too |
+| **Match screen ratio** | Crops the pen area to the ratio of the PC's primary monitor |
+| **Show area on tablet** | Dims the tablet outside the pen area and outlines it |
 
 The icon is colored while the pen is on the PC. Pressure curves and pen buttons
 are configured in KDE's **Drawing Tablet** settings.
+
+**Match screen ratio** keeps circles round on a monitor whose shape differs from
+the tablet's. On a 3440x1440 monitor, the area is 243 x 102 mm, centered. Past
+the area, the pen slides along its edge. The ratio applies in screenless mode
+only: in extra screen mode, the pen always covers the whole tablet.
 
 ## Limitations
 
@@ -105,7 +113,9 @@ are configured in KDE's **Drawing Tablet** settings.
 The tablet's digitizer is readable from an `adb shell` without root.
 `movink-bridge.py` streams its evdev events to the PC and recreates the pen with
 `uinput`. `grab/` is an ARM64 helper that holds an exclusive grab, so Android does
-not also react to the pen.
+not also react to the pen. The pen area is the axis range of that `uinput` device.
+`overlay/` is a dex run with `app_process` from the same shell, which draws a
+SurfaceFlinger layer with no input window, so touch passes through it.
 
 `movink-display.py` switches the tablet to USB tethering, creates a monitor with
 `krfb-virtualmonitor` and streams it with Sunshine to Moonlight. Sunshine binds to
@@ -119,7 +129,7 @@ systemctl --user disable --now movink-display movink-tray movink-bridge
 rm ~/.config/systemd/user/movink-{bridge,display,tray}.service
 nmcli connection delete movink-usb
 sudo rm /etc/udev/rules.d/70-movink-uinput.rules
-adb shell rm /data/local/tmp/movink-grab
+adb shell rm /data/local/tmp/movink-grab /data/local/tmp/movink-overlay.dex
 ```
 
 ## License
