@@ -1,0 +1,12 @@
+[Unit]
+Description=Wacom MovinkPad 11 tray control
+PartOf=graphical-session.target
+After=graphical-session.target plasma-plasmashell.service
+
+[Service]
+ExecStart=%h/code/wacom/movink-tray.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

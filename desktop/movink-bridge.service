@@ -1,0 +1,13 @@
+[Unit]
+Description=Wacom MovinkPad 11 pen bridge (USB/ADB)
+
+[Service]
+ExecStart=%h/code/wacom/movink-bridge.py
+Restart=on-failure
+RestartSec=5
+# SIGTERM only to the bridge: it needs the adb server alive to release the tablet.
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target
