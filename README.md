@@ -96,6 +96,8 @@ The tray icon starts at login.
 The icon is colored while the pen is on the PC. Pressure curves and pen buttons
 are configured in KDE's **Drawing Tablet** settings.
 
+Outside KDE, or without the extra screen tools, the tray hides both **Mode** items.
+
 **Match screen ratio** keeps circles round on a monitor whose shape differs from
 the tablet's. On a 3440x1440 monitor, the area is 243 x 102 mm, centered. Past
 the area, the pen slides along its edge. The ratio applies in screenless mode

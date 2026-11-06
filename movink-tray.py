@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 """System tray control for the MovinkPad: pen on/off, display mode, pen area and Android touch block."""
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -14,12 +16,19 @@ BLOCK_TOUCH_FILE = Path.home() / ".config/movink-bridge/block_touch"
 MATCH_SCREEN_FILE = Path.home() / ".config/movink-bridge/match_screen"
 HIDE_AREA_FILE = Path.home() / ".config/movink-bridge/hide_area"
 PEN_DEVICE_NAME = "Wacom MovinkPad 11 Pen"
+EXTRA_SCREEN_TOOLS = ("krfb-virtualmonitor", "kscreen-doctor", "sunshine")
 REFRESH_MS = 2000
 
 
 def unit_enabled(unit):
     state = subprocess.run(["systemctl", "--user", "is-active", unit], capture_output=True, text=True)
     return state.stdout.strip() in ("active", "activating")
+
+
+def extra_screen_supported():
+    # The virtual monitor, its capture and the pen mapping all go through KWin.
+    desktops = os.environ.get("XDG_CURRENT_DESKTOP", "").split(":")
+    return "KDE" in desktops and all(shutil.which(tool) for tool in EXTRA_SCREEN_TOOLS)
 
 
 def pen_connected():
@@ -51,8 +60,9 @@ class Tray:
         self.screenless_action.triggered.connect(lambda: self.set_display(False))
         self.display_action = QAction("Mode: extra screen", self.modes, checkable=True)
         self.display_action.triggered.connect(lambda: self.set_display(True))
-        self.menu.addActions(self.modes.actions())
-        self.menu.addSeparator()
+        if extra_screen_supported():
+            self.menu.addActions(self.modes.actions())
+            self.menu.addSeparator()
 
         self.match_action = QAction("Match screen ratio", self.menu, checkable=True)
         self.match_action.triggered.connect(self.set_match_screen)
